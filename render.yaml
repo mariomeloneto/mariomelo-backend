@@ -2,7 +2,7 @@ services:
   - type: web
     name: mariomelo-api
     env: node
-    buildCommand: npm install
+    buildCommand: npm install && npm run init-db
     startCommand: npm start
     envVars:
       - key: PORT
