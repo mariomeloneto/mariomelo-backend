@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: mariomelo-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        value: KqiEJNDnci90!@@DNjsjiEWUQIWjhnndeDW
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        value: https://www.mariomelo.adv.br
