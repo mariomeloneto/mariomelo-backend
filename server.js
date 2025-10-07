@@ -47,6 +47,41 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Rota temporária para inicializar banco (REMOVER EM PRODUÇÃO)
+app.get('/api/init-database', async (req, res) => {
+  try {
+    const bcrypt = await import('bcryptjs');
+    
+    // Verificar se já existe usuário
+    const existingUser = usersDB.getByEmail('mario.melo@mariomelo.adv.br');
+    
+    if (!existingUser) {
+      const hashedPassword = await bcrypt.default.hash('MarioNeto2134!', 10);
+      usersDB.create({
+        name: 'Mário Melo',
+        email: 'mario.melo@mariomelo.adv.br',
+        password: hashedPassword,
+        role: 'admin'
+      });
+      
+      res.json({ 
+        success: true, 
+        message: 'Usuário admin criado com sucesso!',
+        email: 'mario.melo@mariomelo.adv.br'
+      });
+    } else {
+      res.json({ 
+        success: true, 
+        message: 'Usuário admin já existe',
+        email: 'mario.melo@mariomelo.adv.br'
+      });
+    }
+  } catch (error) {
+    console.error('Erro ao inicializar banco:', error);
+    res.status(500).json({ error: 'Erro ao inicializar banco' });
+  }
+});
+
 // Listar todos os artigos (público)
 app.get('/api/articles', (req, res) => {
   try {
