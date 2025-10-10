@@ -10,10 +10,35 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
+// Middleware CORS - Configuração para produção
+const allowedOrigins = [
+  'https://mariomelo.adv.br',
+  'https://www.mariomelo.adv.br',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+// Se FRONTEND_URL estiver definido, adiciona à lista
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
-  credentials: true
+  origin: function (origin, callback) {
+    // Permite requisições sem origin (como Postman, curl, etc)
+    if (!origin) return callback(null, true);
+    
+    // Verifica se a origem está na lista de permitidas
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('❌ Origem bloqueada por CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
