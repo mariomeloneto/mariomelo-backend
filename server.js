@@ -75,11 +75,10 @@ app.get('/api/health', (req, res) => {
 // Rota temporária para inicializar banco
 app.get('/api/init-database', async (req, res) => {
   try {
-    const bcrypt = await import('bcryptjs');
     const existingUser = usersDB.getByEmail('mario.melo@mariomelo.adv.br');
     
     if (!existingUser) {
-      const hashedPassword = await bcrypt.default.hash('MarioNeto2134!', 10);
+      const hashedPassword = await bcrypt.hash('MarioNeto2134!', 10);
       usersDB.create({
         name: 'Mário Melo',
         email: 'mario.melo@mariomelo.adv.br',
