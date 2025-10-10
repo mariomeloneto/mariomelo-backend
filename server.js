@@ -269,6 +269,61 @@ app.delete('/api/articles/:id', authenticateToken, (req, res) => {
   }
 });
 
+// ==================== SITEMAP ====================
+
+// Gerar sitemap.xml dinamicamente
+app.get('/sitemap.xml', (req, res) => {
+  try {
+    const baseUrl = process.env.FRONTEND_URL || 'https://mariomelo.adv.br';
+    const today = new Date().toISOString().split('T')[0];
+    
+    // URLs estáticas
+    const staticUrls = [
+      { loc: '/', lastmod: today, changefreq: 'weekly', priority: '1.0' },
+      { loc: '/sobre', lastmod: today, changefreq: 'monthly', priority: '0.8' },
+      { loc: '/areas-de-atuacao', lastmod: today, changefreq: 'monthly', priority: '0.9' },
+      { loc: '/artigos', lastmod: today, changefreq: 'weekly', priority: '0.9' },
+      { loc: '/depoimentos', lastmod: today, changefreq: 'monthly', priority: '0.7' },
+      { loc: '/contato', lastmod: today, changefreq: 'monthly', priority: '0.8' }
+    ];
+    
+    // URLs dos artigos
+    const articles = articlesDB.findAll();
+    const articleUrls = articles.map(article => {
+      const articleDate = article.updatedAt 
+        ? new Date(article.updatedAt).toISOString().split('T')[0]
+        : new Date(article.createdAt).toISOString().split('T')[0];
+      
+      return {
+        loc: `/artigos/${article.slug}`,
+        lastmod: articleDate,
+        changefreq: 'monthly',
+        priority: '0.8'
+      };
+    });
+    
+    // Combinar todas as URLs
+    const allUrls = [...staticUrls, ...articleUrls];
+    
+    // Gerar XML
+    const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allUrls.map(url => `  <url>
+    <loc>${baseUrl}${url.loc}</loc>
+    <lastmod>${url.lastmod}</lastmod>
+    <changefreq>${url.changefreq}</changefreq>
+    <priority>${url.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+    
+    res.header('Content-Type', 'application/xml');
+    res.send(xmlContent);
+  } catch (error) {
+    console.error('Erro ao gerar sitemap:', error);
+    res.status(500).send('Erro ao gerar sitemap');
+  }
+});
+
 // ==================== INICIAR SERVIDOR ====================
 
 app.listen(PORT, () => {
