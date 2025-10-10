@@ -288,7 +288,7 @@ app.get('/sitemap.xml', (req, res) => {
     ];
     
     // URLs dos artigos
-    const articles = articlesDB.findAll();
+    const articles = articlesDB.getAll();
     const articleUrls = articles.map(article => {
       const articleDate = article.updatedAt 
         ? new Date(article.updatedAt).toISOString().split('T')[0]
