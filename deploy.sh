@@ -20,8 +20,9 @@ cd $PROJECT_DIR || exit
 echo -e "${BLUE}📦 Instalando dependências...${NC}"
 npm install --production
 
-echo -e "${BLUE}🔧 Inicializando banco de dados...${NC}"
-npm run init-db
+# Nota: NÃO executar init-db em deploy para preservar dados existentes
+# O banco de dados já está criado e contém os artigos
+# Se precisar recriar o banco, execute manualmente: npm run init-db
 
 echo -e "${BLUE}🔄 Reiniciando aplicação com PM2...${NC}"
 pm2 restart mariomelo-backend || pm2 start ecosystem.config.cjs
