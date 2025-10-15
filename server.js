@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import { articlesDB, usersDB } from './database.js';
 
 dotenv.config();
@@ -269,6 +270,83 @@ app.delete('/api/articles/:id', authenticateToken, (req, res) => {
   }
 });
 
+// ==================== CONTATO ====================
+
+// Configurar transporter do Nodemailer
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true para 465, false para outras portas
+    auth: {
+      user: process.env.EMAIL_USER, // seu e-mail
+      pass: process.env.EMAIL_PASSWORD // senha de aplicativo do Gmail
+    }
+  });
+};
+
+// Endpoint para enviar e-mail de contato
+app.post('/api/contact', async (req, res) => {
+  try {
+    const { name, email, phone, subject, area, message } = req.body;
+    
+    // Validação básica
+    if (!name || !email || !phone || !subject || !area || !message) {
+      return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+    }
+    
+    const transporter = createTransporter();
+    
+    // E-mail para o escritório
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: 'contato@mariomelo.adv.br',
+      subject: `[Site] ${subject}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3D4F5C; border-bottom: 3px solid #C9A34A; padding-bottom: 10px;">
+            Nova Mensagem do Site
+          </h2>
+          
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <p style="margin: 10px 0;"><strong>Nome:</strong> ${name}</p>
+            <p style="margin: 10px 0;"><strong>E-mail:</strong> ${email}</p>
+            <p style="margin: 10px 0;"><strong>Telefone:</strong> ${phone}</p>
+            <p style="margin: 10px 0;"><strong>Área de Interesse:</strong> ${area}</p>
+            <p style="margin: 10px 0;"><strong>Assunto:</strong> ${subject}</p>
+          </div>
+          
+          <div style="margin: 20px 0;">
+            <h3 style="color: #3D4F5C;">Mensagem:</h3>
+            <p style="line-height: 1.6; color: #333;">${message.replace(/\n/g, '<br>')}</p>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            Esta mensagem foi enviada através do formulário de contato do site mariomelo.adv.br
+          </p>
+        </div>
+      `
+    };
+    
+    await transporter.sendMail(mailOptions);
+    
+    console.log(`✉️ E-mail enviado de: ${name} (${email})`);
+    
+    res.json({ 
+      success: true, 
+      message: 'Mensagem enviada com sucesso!' 
+    });
+    
+  } catch (error) {
+    console.error('Erro ao enviar e-mail:', error);
+    res.status(500).json({ 
+      error: 'Erro ao enviar mensagem. Tente novamente mais tarde.' 
+    });
+  }
+});
+
 // ==================== SITEMAP ====================
 
 // Gerar sitemap.xml dinamicamente
@@ -283,7 +361,6 @@ app.get('/sitemap.xml', (req, res) => {
       { loc: '/sobre', lastmod: today, changefreq: 'monthly', priority: '0.8' },
       { loc: '/areas-de-atuacao', lastmod: today, changefreq: 'monthly', priority: '0.9' },
       { loc: '/artigos', lastmod: today, changefreq: 'weekly', priority: '0.9' },
-      { loc: '/depoimentos', lastmod: today, changefreq: 'monthly', priority: '0.7' },
       { loc: '/contato', lastmod: today, changefreq: 'monthly', priority: '0.8' }
     ];
     
